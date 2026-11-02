@@ -1,0 +1,42 @@
+#include <stdint.h>
+
+void EXTI9_5_IRQHandler(void)
+{
+   volatile uint32_t *gpioc_odr=(uint32_t *)(0x40011000+0x0c);
+   volatile uint32_t *exti_pr=(uint32_t *)(0x40010400+0x14);
+   if (*exti_pr & 1<<6) {
+      *gpioc_odr = 0x1000;
+      *exti_pr |= 1<<6;
+   }
+   if (*exti_pr & 1<<7) {
+      *gpioc_odr = 0x0000;
+      *exti_pr |= 1<<7;
+   }
+}
+
+int main(void)
+{
+   volatile uint32_t *gpioc_crh=(uint32_t *)(0x40011000+0x04);
+   volatile uint32_t *gpioc_odr=(uint32_t *)(0x40011000+0x0c);
+   volatile uint32_t *gpioa_crl=(uint32_t *)(0x40010800+0x00);
+
+   volatile uint32_t *afio_exticr2=(uint32_t *)(0x40010000+0x0C);
+   volatile uint32_t *exti_rtsr=(uint32_t *)(0x40010400+0x08);
+   volatile uint32_t *exti_ftsr=(uint32_t *)(0x40010400+0x0c);
+   volatile uint32_t *exti_pr=(uint32_t *)(0x40010400+0x14);
+   volatile uint32_t *exti_imr=(uint32_t *)(0x40010400+0x00);
+   volatile uint32_t *nvic_iser1=(uint32_t *)(0xe000e100+0x00);
+
+   *gpioc_crh |= 0x30000;
+   *gpioa_crl = 0x88000000;
+
+   *afio_exticr2 = 0x0000;
+   *exti_rtsr = 0x0000;
+   *exti_ftsr = 1<<6|1<<7;
+   *exti_imr = 1<<6|1<<7;
+   *nvic_iser1 = 1<<23;
+
+    /* Loop forever */
+    for(;;) ;
+    return 0;
+}
